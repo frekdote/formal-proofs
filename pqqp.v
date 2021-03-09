@@ -1,8 +1,8 @@
 (******************************************************************************)
 (* The statement that is proved here                                          *)
 (*   Let p and q be integers.                                                 *)
-(*   If p, q, p ^ q + q ^ p are prime numbers,                                *)
-(*   then (p, q) = (2, 3) or (p, q) = (3, 2)                                  *)
+(*   p, q, p ^ q + q ^ p are prime numbers                                    *)
+(*   iff (p, q) = (2, 3) or (p, q) = (3, 2)                                   *)
 (*                                                                            *)
 (* This file requires mczify (https://github.com/math-comp/mczify)            *)
 (******************************************************************************)
@@ -16,14 +16,15 @@ Unset Printing Implicit Defensive.
 From Coq Require Import Lia.
 From mathcomp.zify Require Import zify.
 
-Theorem th p q : prime p -> prime q -> prime (p ^ q + q ^ p) -> (p = 2 /\ q = 3) \/ (p = 3 /\ q = 2).
+Theorem th p q : prime p /\ prime q /\ prime (p ^ q + q ^ p) <-> (p = 2 /\ q = 3) \/ (p = 3 /\ q = 2).
 Proof.
+split; last by case; case => -> ->.
 wlog : p q / p <= q.
   move=> H.
-  case: (leqP p q) => [| /ltnW leqp prmp prmq prmpqqp]; first by exact: H.
+  case: (leqP p q) => [| /ltnW leqp [prmp [prmq prmpqqp]]]; first by exact: H.
   rewrite addnC in prmpqqp.
-  by have := H q p leqp prmq prmp prmpqqp; lia.
-move=> lepq prmp prmq prmpqqp.
+  by have := H q p leqp; lia.
+move=> lepq [prmp [prmq prmpqqp]].
 case: (even_prime prmp) => [? | oddp]; case: (even_prime prmq) => [? | oddq]; subst => //.
 - case: (boolP (3 %| q)) => [dvd3q | /ltac:(rewrite /dvdn) ndvd3q].
     by case: (primeP prmq) => _ /(_ 3 dvd3q); lia.
@@ -47,3 +48,4 @@ case: (even_prime prmp) => [? | oddp]; case: (even_prime prmq) => [? | oddq]; su
     apply: (@ltn_trans (p ^ 1)); try lia.
     by apply: ltn_addr; rewrite ltn_exp2l; lia.
   by lia.
+Qed.
